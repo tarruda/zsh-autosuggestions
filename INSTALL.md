@@ -59,7 +59,7 @@
 2. To activate the autosuggestions, add the following at the end of your .zshrc: 
     
     ```sh
-    source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    echo "source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" >> ${ZDOTDIR:-$HOME}/.zshrc
     ```
 
 3. Start a new terminal session.
