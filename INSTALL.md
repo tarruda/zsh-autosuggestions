@@ -3,6 +3,7 @@
 * [Packages](#packages)
 * [Antigen](#antigen)
 * [Oh My Zsh](#oh-my-zsh)
+* [zinit](#zinit)
 * [HomeBrew](#homebrew)
 * [Manual](#manual-git-clone)
 
@@ -48,6 +49,11 @@
     ```
 
 3. Start a new terminal session.
+
+## zinit
+
+Add `zinit light zsh-users/zsh-autosuggestions` to the end of your .zshrc.
+
 
 ## Homebrew
 
