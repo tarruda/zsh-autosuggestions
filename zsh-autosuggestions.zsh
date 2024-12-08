@@ -3,7 +3,7 @@
 # v0.7.1
 # Copyright (c) 2013 Thiago de Arruda
 # Copyright (c) 2016-2021 Eric Freese
-# 
+#
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation
 # files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@
 # copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following
 # conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 # OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -110,15 +110,44 @@ typeset -g ZSH_AUTOSUGGEST_ORIGINAL_WIDGET_PREFIX=autosuggest-orig-
 		run-help
 		set-local-history
 		which-command
-		yank
 		yank-pop
 		zle-\*
 	)
+	if [[ "${ZSH_VERSION}" < 5.2 ]]; then
+		ZSH_AUTOSUGGEST_IGNORE_WIDGETS+=(yank)
+	fi
 }
 
 # Pty name for capturing completions for completion suggestion strategy
 (( ! ${+ZSH_AUTOSUGGEST_COMPLETIONS_PTY_NAME} )) &&
 typeset -g ZSH_AUTOSUGGEST_COMPLETIONS_PTY_NAME=zsh_autosuggest_completion_pty
+
+# Widgets that should preserve ZLE_KILL flag
+(( ! ${+ZSH_AUTOSUGGEST_ZLE_KILL_WIDGETS} )) && {
+	typeset -ga ZSH_AUTOSUGGEST_ZLE_KILL_WIDGETS
+	ZSH_AUTOSUGGEST_ZLE_KILL_WIDGETS=(
+		kill-\*
+		backward-kill-\*
+	)
+}
+
+# Widgets that should preserve ZLE_YANK flag
+(( ! ${+ZSH_AUTOSUGGEST_ZLE_YANK_WIDGETS} )) && {
+	typeset -ga ZSH_AUTOSUGGEST_ZLE_YANK_WIDGETS
+	ZSH_AUTOSUGGEST_ZLE_YANK_WIDGETS=(
+		bracketed-paste
+		vi-put-after
+		yank
+	)
+}
+
+# Widgets that should preserve ZLE_YANKBEFORE flag
+(( ! ${+ZSH_AUTOSUGGEST_ZLE_YANKBEFORE_WIDGETS} )) && {
+	typeset -ga ZSH_AUTOSUGGEST_ZLE_YANKBEFORE_WIDGETS
+	ZSH_AUTOSUGGEST_ZLE_YANKBEFORE_WIDGETS=(
+		vi-put-before
+	)
+}
 
 #--------------------------------------------------------------------#
 # Utility Functions                                                  #
@@ -183,8 +212,16 @@ _zsh_autosuggest_bind_widget() {
 	# correctly. $WIDGET cannot be trusted because other plugins call
 	# zle without the `-w` flag (e.g. `zle self-insert` instead of
 	# `zle self-insert -w`).
+	# Preserve the ZLE_KILL | ZLE_YANK flags for builtin widgets for ZSH >= 5.2
 	eval "_zsh_autosuggest_bound_${bind_count}_${(q)widget}() {
 		_zsh_autosuggest_widget_$autosuggest_action $prefix$bind_count-${(q)widget} \$@
+		if [[ ! "${ZSH_VERSION}" < 5.2 ]]; then
+			case ${(q)widget} in
+				(${(j:|:)ZSH_AUTOSUGGEST_ZLE_KILL_WIDGETS}) zle -f 'kill';;
+				(${(j:|:)ZSH_AUTOSUGGEST_ZLE_YANK_WIDGETS}) zle -f 'yank';;
+				(${(j:|:)ZSH_AUTOSUGGEST_ZLE_YANKBEFORE_WIDGETS}) zle -f 'yankbefore';;
+			esac
+		fi
 	}"
 
 	# Create the bound widget
@@ -859,9 +896,9 @@ autoload -Uz add-zsh-hook is-at-least
 # older versions because there is a bug when using async mode where ^C does not
 # work immediately after fetching a suggestion.
 # See https://github.com/zsh-users/zsh-autosuggestions/issues/364
-if is-at-least 5.0.8; then
-	typeset -g ZSH_AUTOSUGGEST_USE_ASYNC=
-fi
+# if is-at-least 5.0.8; then
+# 	typeset -g ZSH_AUTOSUGGEST_USE_ASYNC=
+# fi
 
 # Start the autosuggestion widgets on the next precmd
 add-zsh-hook precmd _zsh_autosuggest_start

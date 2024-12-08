@@ -51,8 +51,16 @@ _zsh_autosuggest_bind_widget() {
 	# correctly. $WIDGET cannot be trusted because other plugins call
 	# zle without the `-w` flag (e.g. `zle self-insert` instead of
 	# `zle self-insert -w`).
+	# Preserve the ZLE_KILL | ZLE_YANK flags for builtin widgets for ZSH >= 5.2
 	eval "_zsh_autosuggest_bound_${bind_count}_${(q)widget}() {
 		_zsh_autosuggest_widget_$autosuggest_action $prefix$bind_count-${(q)widget} \$@
+		if [[ ! "${ZSH_VERSION}" < 5.2 ]]; then
+			case ${(q)widget} in
+				(${(j:|:)ZSH_AUTOSUGGEST_ZLE_KILL_WIDGETS}) zle -f 'kill';;
+				(${(j:|:)ZSH_AUTOSUGGEST_ZLE_YANK_WIDGETS}) zle -f 'yank';;
+				(${(j:|:)ZSH_AUTOSUGGEST_ZLE_YANKBEFORE_WIDGETS}) zle -f 'yankbefore';;
+			esac
+		fi
 	}"
 
 	# Create the bound widget
