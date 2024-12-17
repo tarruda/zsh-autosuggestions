@@ -188,7 +188,7 @@ _zsh_autosuggest_bind_widget() {
 	}"
 
 	# Create the bound widget
-	zle -N -- $widget _zsh_autosuggest_bound_${bind_count}_$widget
+	[[ "$widget" = .* ]] || zle -N -- $widget _zsh_autosuggest_bound_${bind_count}_$widget
 }
 
 # Map all configured widgets to the right autosuggest widgets
