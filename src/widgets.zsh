@@ -3,6 +3,8 @@
 # Autosuggest Widget Implementations                                 #
 #--------------------------------------------------------------------#
 
+_ZSH_AUTOSUGGEST_NEW_BUFFER=
+
 # Disable suggestions
 _zsh_autosuggest_disable() {
 	typeset -g _ZSH_AUTOSUGGEST_DISABLED
@@ -88,8 +90,9 @@ _zsh_autosuggest_fetch() {
 		_zsh_autosuggest_async_request "$BUFFER"
 	else
 		local suggestion
+		local new_buffer
 		_zsh_autosuggest_fetch_suggestion "$BUFFER"
-		_zsh_autosuggest_suggest "$suggestion"
+		_zsh_autosuggest_suggest "$suggestion" "$new_buffer"
 	fi
 }
 
@@ -98,11 +101,14 @@ _zsh_autosuggest_suggest() {
 	emulate -L zsh
 
 	local suggestion="$1"
+	local new_buffer="$2"
 
 	if [[ -n "$suggestion" ]] && (( $#BUFFER )); then
 		POSTDISPLAY="${suggestion#$BUFFER}"
+		_ZSH_AUTOSUGGEST_NEW_BUFFER=$new_buffer
 	else
 		POSTDISPLAY=
+		_ZSH_AUTOSUGGEST_NEW_BUFFER=
 	fi
 }
 
@@ -125,10 +131,11 @@ _zsh_autosuggest_accept() {
 
 	# Only accept if the cursor is at the end of the buffer
 	# Add the suggestion to the buffer
-	BUFFER="$BUFFER$POSTDISPLAY"
+	BUFFER="${_ZSH_AUTOSUGGEST_NEW_BUFFER:-"$BUFFER$POSTDISPLAY"}"
 
 	# Remove the suggestion
 	POSTDISPLAY=
+	_ZSH_AUTOSUGGEST_NEW_BUFFER=
 
 	# Run the original widget before manually moving the cursor so that the
 	# cursor movement doesn't make the widget do something unexpected
@@ -148,10 +155,11 @@ _zsh_autosuggest_accept() {
 # Accept the entire suggestion and execute it
 _zsh_autosuggest_execute() {
 	# Add the suggestion to the buffer
-	BUFFER="$BUFFER$POSTDISPLAY"
+	BUFFER="${_ZSH_AUTOSUGGEST_NEW_BUFFER:-"$BUFFER$POSTDISPLAY"}"
 
 	# Remove the suggestion
 	POSTDISPLAY=
+	_ZSH_AUTOSUGGEST_NEW_BUFFER=
 
 	# Call the original `accept-line` to handle syntax highlighting or
 	# other potential custom behavior

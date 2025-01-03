@@ -38,8 +38,10 @@ _zsh_autosuggest_async_request() {
 
 		# Fetch and print the suggestion
 		local suggestion
+		local new_buffer
 		_zsh_autosuggest_fetch_suggestion "$1"
-		echo -nE "$suggestion"
+		echo -E $suggestion
+		echo -E $new_buffer
 	)
 
 	# There's a weird bug here where ^C stops working unless we force a fork
@@ -61,11 +63,13 @@ _zsh_autosuggest_async_response() {
 	emulate -L zsh
 
 	local suggestion
+	local new_buffer
 
 	if [[ -z "$2" || "$2" == "hup" ]]; then
 		# Read everything from the fd and give it as a suggestion
-		IFS='' read -rd '' -u $1 suggestion
-		zle autosuggest-suggest -- "$suggestion"
+		read -r -u $1 suggestion
+		read -r -u $1 new_buffer
+		zle autosuggest-suggest -- "$suggestion" "$new_buffer"
 
 		# Close the fd
 		builtin exec {1}<&-
